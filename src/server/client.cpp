@@ -55,17 +55,18 @@ void Client::_Run()
             }
             if (events[i].events & EPOLLIN) {
                 std::cerr << "event: " << i << " IN on fd: \t" << events[i].data.fd << '\n';
-                int st = 0;
+                int len_buff = 0;
                 char* buff = (char*) calloc(1, 1024);
-                st = read(events[i].data.fd, buff, 1024);
-                std::string data(Message::AddMsg(events[i].data.fd, buff));
+                len_buff = read(events[i].data.fd, buff, 1024);
+                std::string data;
+                data.assign(Message::AddMsg(events[i].data.fd, buff, len_buff).c_str(), len_buff);
                 if (!data.empty()) {
                     Send(events[i].data.fd, data.c_str(), data.size());
                     Message::Clear(events[i].data.fd);
                 }
 
                 delete buff;
-                if (st == 0) CloseSock(events[i].data.fd);
+                if (len_buff == 0) CloseSock(events[i].data.fd);
             }
         }
 

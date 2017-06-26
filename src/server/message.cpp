@@ -6,8 +6,8 @@
 
 
 m_ptr_message_t Message::messages;
-char* Message::start_flag = "12\n";
-char* Message::end_flag = "90\n";
+std::string Message::start_flag = "\0{";
+std::string Message::end_flag = std::string().assign("}\0", 2);
 
 Message::Message()
 {}
@@ -15,27 +15,28 @@ Message::Message()
 Message::~Message()
 {}
 
-std::string Message::AddMsg(int sock, const char* buff)
+std::string Message::AddMsg(int sock, const char* buff, int len_buff)
 {
-    std::cerr << "buff:" << buff << ":\n";
     //std::cerr << "msg:" << Message::messages[sock] << ":\n";
     if (Message::messages[sock].empty()) {
-        if (strncmp(buff, start_flag, strlen(start_flag)) == 0) // Begin format
-            Message::messages[sock] = buff;
-        if (strncmp(&buff[strlen(buff) - strlen(end_flag)],
-            end_flag, strlen(end_flag)) == 0) // End format
+        if (strncmp(buff, start_flag.c_str(), start_flag.size()) == 0) { // Begin format
+            Message::messages[sock] = std::string(buff, len_buff);
+        }
+        if (strncmp(&buff[len_buff - end_flag.size()],
+            end_flag.c_str(), end_flag.size()) == 0) // End format
         {
             return Message::messages[sock];
         }
     }
     else {
-        if (strncmp(buff, start_flag, strlen(start_flag)) == 0) // Begin format
-            Message::messages[sock] = buff;
+        if (strncmp(buff, start_flag.c_str(), start_flag.size()) == 0) {// Begin format
+            Message::messages[sock].assign(buff, len_buff);
+        }
         else
-            Message::messages[sock] += buff;
+            Message::messages[sock].assign(buff, len_buff);
 
-        if (strncmp(&buff[strlen(buff) - strlen(end_flag)],
-            end_flag, strlen(end_flag)) == 0) // End format
+        if (strncmp(&buff[len_buff - end_flag.size()],
+            end_flag.c_str(), end_flag.size()) == 0) // End format
         {
             std::cerr << "send:" << Message::messages[sock] << ":\n";
             return Message::messages[sock]; // Return for send
