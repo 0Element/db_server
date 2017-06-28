@@ -25,9 +25,9 @@ int main(int argc, char const *argv[])
         const char *srv_addr = "127.0.0.1";
         int srv_port = 1050;
 
+
         new Server(srv_addr, srv_port);
         new Server(srv_addr, srv_port + 1);
-        std::cerr << "Servers count: " << Server::servers.size() << "\n";
 
         for (auto srv : Server::servers) {
             srv->Run();
@@ -41,6 +41,7 @@ int main(int argc, char const *argv[])
             cl->Run();
         }
 
+        std::cerr << "Servers count: " << Server::servers.size() << "\n";
         std::cerr << "Clients count: " << Client::clients.size() << "\n";
 
         sleep(-1);

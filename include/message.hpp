@@ -1,24 +1,32 @@
 #pragma once
 
-#include <map>
+#include <memory>
+
+#include "lqueue.hpp"
 
 
-typedef std::map<int, std::string> m_ptr_message_t;
+class Message;
+typedef std::shared_ptr<Message> ptr_msg_t;
 
 class Message
 {
 public:
-    static std::string AddMsg(int sock, const char* buff, int len_buff);
-    static void Clear(int sock);
-    static void Erase(int sock);
-
-    static m_ptr_message_t messages;
-    static std::string start_flag;
-    static std::string end_flag;
-
-private:
     Message();
     ~Message();
+
+    void AddMsg(int sock, const char* buff, int len_buff);
+    void Clear(int sock);
+    void Erase(int sock);
+
+    static port_msg_t Pop();
+
+private:
     Message(const Message&);
     Message& operator=(Message&);
+
+    m_port_msg_t messages;
+    static Lqueue lqueue;
+
+    static std::string start_flag;
+    static std::string end_flag;
 };

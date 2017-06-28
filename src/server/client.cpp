@@ -13,6 +13,7 @@ v_ptr_client_t Client::clients;
 Client::Client()
 {
     std::cerr << "Constructor client\n";
+    messages = ptr_msg_t((new Message()));
     epoll = ptr_epoll_t(new Epoll());
 
     Client::clients.push_back(ptr_client_t(this));
@@ -58,12 +59,7 @@ void Client::_Run()
                 int len_buff = 0;
                 char* buff = (char*) calloc(1, 1024);
                 len_buff = read(events[i].data.fd, buff, 1024);
-                std::string data;
-                data.assign(Message::AddMsg(events[i].data.fd, buff, len_buff).c_str(), len_buff);
-                if (!data.empty()) {
-                    Send(events[i].data.fd, data.c_str(), data.size());
-                    Message::Clear(events[i].data.fd);
-                }
+                messages->AddMsg(events[i].data.fd, buff, len_buff);
 
                 delete buff;
                 if (len_buff == 0) CloseSock(events[i].data.fd);
@@ -77,7 +73,7 @@ void Client::_Run()
 void Client::CloseSock(int sock)
 {
     close(sock);
-    Message::Erase(sock);
+    messages->Erase(sock);
 }
 
 void Client::Stop()

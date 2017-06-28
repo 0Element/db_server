@@ -5,6 +5,7 @@
 #include <thread>
 
 #include "epoll.hpp"
+#include "message.hpp"
 
 
 class Client;
@@ -30,6 +31,7 @@ private:
     int Send(int sock, const char* buff, int len);
     void CloseSock(int sock);
 
+    ptr_msg_t messages;
     std::thread thr;
     ptr_epoll_t epoll;
     bool quit;

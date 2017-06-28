@@ -4,8 +4,8 @@
 
 #include <string.h>
 
+Lqueue Message::lqueue;
 
-m_ptr_message_t Message::messages;
 std::string Message::start_flag = "\0{";
 std::string Message::end_flag = std::string().assign("}\0", 2);
 
@@ -15,7 +15,7 @@ Message::Message()
 Message::~Message()
 {}
 
-std::string Message::AddMsg(int sock, const char* buff, int len_buff)
+void Message::AddMsg(int sock, const char* buff, int len_buff)
 {
     //std::cerr << "msg:" << Message::messages[sock] << ":\n";
     if (Message::messages[sock].empty()) {
@@ -25,7 +25,10 @@ std::string Message::AddMsg(int sock, const char* buff, int len_buff)
         if (strncmp(&buff[len_buff - end_flag.size()],
             end_flag.c_str(), end_flag.size()) == 0) // End format
         {
-            return Message::messages[sock];
+            //Send in queue databases
+            //return Message::messages[sock];
+            Message::lqueue.Push(port_msg_t(sock, Message::messages[sock]));
+            Clear(sock);
         }
     }
     else {
@@ -39,11 +42,14 @@ std::string Message::AddMsg(int sock, const char* buff, int len_buff)
             end_flag.c_str(), end_flag.size()) == 0) // End format
         {
             std::cerr << "send:" << Message::messages[sock] << ":\n";
-            return Message::messages[sock]; // Return for send
+            //Send in queue databases
+            //return Message::messages[sock];
+            Message::lqueue.Push(port_msg_t(sock, Message::messages[sock]));
+            Clear(sock);
         }
     }
 
-    return "";
+    //return "";
 }
 
 void Message::Clear(int sock)
@@ -54,4 +60,9 @@ void Message::Clear(int sock)
 void Message::Erase(int sock)
 {
     Message::messages.erase(sock);
+}
+
+port_msg_t Message::Pop()
+{
+    return Message::lqueue.Pop();
 }

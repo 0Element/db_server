@@ -5,14 +5,14 @@ INCLUDE = -Iinclude -I../include -I../../include
 
 OBJ_PATH = build
 LIB_PATH = libs
-INN_LIBS = -l server -l nettools
+INNER_LIBS = -l server -l nettools -l utils
 APP_SRV = target/srv
 
 export CC FLAGS LIBS INCLUDE
 
 
-all: check_path nettools server main
-	$(CC) $(FLAGS) $(INCLUDE) -o $(APP_SRV) $(OBJ_PATH)/*.o -L $(LIB_PATH)/ $(INN_LIBS) $(LIBS)
+all: check_path utils nettools server main
+	$(CC) $(FLAGS) $(INCLUDE) -o $(APP_SRV) $(OBJ_PATH)/*.o -L $(LIB_PATH)/ $(INNER_LIBS) $(LIBS)
 
 main:
 	$(CC) $(FLAGS) $(INCLUDE) -c -o $(OBJ_PATH)/main.o src/main.cpp
@@ -22,6 +22,9 @@ server:
 
 nettools:
 	cd src/nettools; make PKG_NAME=libnettools.a
+
+utils:
+	cd src/utils; make PKG_NAME=libutils.a
 
 check_path:
 	test -d target || mkdir target
@@ -36,3 +39,4 @@ clean:
 	rm -f $(APP) $(OBJ_PATH)/* $(LIB_PATH)/*
 	cd src/server; make clean PKG_NAME=libserver.a
 	cd src/nettools; make clean PKG_NAME=libnettools.a
+	cd src/utils; make clean PKG_NAME=libutils.a
