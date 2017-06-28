@@ -2,6 +2,7 @@
 
 #include "server.hpp"
 #include "client.hpp"
+#include "file_client.hpp"
 
 #include <exception>
 
@@ -44,7 +45,9 @@ int main(int argc, char const *argv[])
         std::cerr << "Servers count: " << Server::servers.size() << "\n";
         std::cerr << "Clients count: " << Client::clients.size() << "\n";
 
-        sleep(-1);
+        //sleep(-1);
+        FileClient file_cl;
+        file_cl.Print();
     }
     catch (std::exception) {
         std::cerr << "Exception\n";
