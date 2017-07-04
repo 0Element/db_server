@@ -21,6 +21,8 @@ public:
     void Run();
     void Stop();
     int GetClSock();
+    void Read(int sock);
+    static void Write(int sock);
 
     static v_ptr_srv_t servers;
 

@@ -1,6 +1,6 @@
 #include "server.hpp"
 #include "client.hpp"
-#include "for_sock.hpp"
+#include "sock.hpp"
 
 #include <sys/socket.h>
 #include <arpa/inet.h>
@@ -101,7 +101,7 @@ void Server::_Run()
             }
         }
 
-        delete events;
+        delete [] events;
     }
 
     /*while(!quit) {

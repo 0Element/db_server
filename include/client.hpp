@@ -27,8 +27,8 @@ public:
 
 private:
     void _Run();
-    int Read(int sock);
-    int Send(int sock, const char* buff, int len);
+    //int Read(int sock);
+    //int Send(int sock, const char* buff, int len);
     void CloseSock(int sock);
 
     ptr_msg_t messages;

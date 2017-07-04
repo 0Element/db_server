@@ -1,10 +1,9 @@
 #include "message.hpp"
 
 #include <iostream>
+#include <cstring>
 
-#include <string.h>
-
-Lqueue Message::lqueue;
+map_cl_name_lqueue Message::lqueues;
 
 std::string Message::start_flag = "\0{";
 std::string Message::end_flag = std::string().assign("}\0", 2);
@@ -27,7 +26,7 @@ void Message::AddMsg(int sock, const char* buff, int len_buff)
         {
             //Send in queue databases
             //return Message::messages[sock];
-            Message::lqueue.Push(port_msg_t(sock, Message::messages[sock]));
+            Message::lqueues["default"].Push(port_msg_t(sock, Message::messages[sock]));
             Clear(sock);
         }
     }
@@ -44,7 +43,7 @@ void Message::AddMsg(int sock, const char* buff, int len_buff)
             std::cerr << "send:" << Message::messages[sock] << ":\n";
             //Send in queue databases
             //return Message::messages[sock];
-            Message::lqueue.Push(port_msg_t(sock, Message::messages[sock]));
+            Message::lqueues["default"].Push(port_msg_t(sock, Message::messages[sock]));
             Clear(sock);
         }
     }
@@ -62,7 +61,7 @@ void Message::Erase(int sock)
     Message::messages.erase(sock);
 }
 
-port_msg_t Message::Pop()
+port_msg_t Message::Pop(std::string cl_name)
 {
-    return Message::lqueue.Pop();
+    return Message::lqueues[cl_name].Pop();
 }

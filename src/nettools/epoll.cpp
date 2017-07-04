@@ -1,5 +1,6 @@
 #include <vector>
 #include <iostream>
+#include <cstring>
 
 #include "epoll.hpp"
 
@@ -25,6 +26,7 @@ Epoll::Epoll()
 int Epoll::AddEpollClientFd(int fd)
 {
     struct epoll_event event;
+    memset(&event, 0, sizeof(struct epoll_event));
 
     event.data.fd = fd;
     event.events = EPOLLOUT;
@@ -45,6 +47,7 @@ int Epoll::AddEpollClientFd(int fd)
 int Epoll::AddEpollSrvFd(int fd)
 {
     struct epoll_event event;
+    memset(&event, 0, sizeof(struct epoll_event));
 
     event.data.fd = fd;
     event.events = EPOLLIN;
@@ -97,19 +100,20 @@ int Epoll::DelEpollFd(int fd)
 struct epoll_event* Epoll::EpollWait(int *nr_events)
 {
     struct epoll_event *events;
-
     events = new epoll_event[MAX_EVENTS];
+
     if (!events) {
         std::cerr << "malloc" << '\n';
         err_ = -1;
+        delete [] events;
         return NULL;
     }
 
     *nr_events = epoll_wait(epoll_fd_, events, MAX_EVENTS, 5000);
     if (*nr_events < 0) {
         std::cerr << "epoll_wait" << '\n';
-        delete [] events;
         err_ = -1;
+        delete [] events;
         return NULL;
     }
 

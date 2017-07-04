@@ -47,7 +47,8 @@ int main(int argc, char const *argv[])
 
         //sleep(-1);
         FileClient file_cl;
-        file_cl.Print();
+        //while(true)
+            file_cl.GetMsg();
     }
     catch (std::exception) {
         std::cerr << "Exception\n";

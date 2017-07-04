@@ -1,11 +1,10 @@
 #include "client.hpp"
 #include "message.hpp"
+#include "sock.hpp"
 
 #include <iostream>
 
 #include <stdio.h>
-#include <stdlib.h>
-#include <sys/socket.h>
 
 
 v_ptr_client_t Client::clients;
@@ -56,24 +55,19 @@ void Client::_Run()
             }
             if (events[i].events & EPOLLIN) {
                 std::cerr << "event: " << i << " IN on fd: \t" << events[i].data.fd << '\n';
-                int len_buff = 0;
                 char* buff = (char*) calloc(1, 1024);
-                len_buff = read(events[i].data.fd, buff, 1024);
-                messages->AddMsg(events[i].data.fd, buff, len_buff);
+                int len_buff = Read(events[i].data.fd, buff);
+                if (len_buff > 0)
+                    messages->AddMsg(events[i].data.fd, buff, len_buff);
+                else if (len_buff == 0)
+                    CloseSock(events[i].data.fd);
 
-                delete buff;
-                if (len_buff == 0) CloseSock(events[i].data.fd);
+                free(buff);
             }
         }
 
-        delete events;
+        delete [] events;
     }
-}
-
-void Client::CloseSock(int sock)
-{
-    close(sock);
-    messages->Erase(sock);
 }
 
 void Client::Stop()
@@ -98,6 +92,12 @@ int Client::AddClSock(int sock) {
 void Client::AddSock(int sock)
 {
     epoll->AddEpollSrvFd(sock);
+}
+
+void Client::CloseSock(int sock)
+{
+    Close(sock);
+    messages->Erase(sock);
 }
 
 Client::~Client()
@@ -225,7 +225,7 @@ Client::~Client()
  * Send data into sock fd
  * return 0 if true else -1
  */
-int Client::Send(int sock, const char* msg, int bytes)
+/*int Client::Send(int sock, const char* msg, int bytes)
 {
     int all_bytes = 0, ret = 0;
 
@@ -272,4 +272,4 @@ int Client::Send(int sock, const char* msg, int bytes)
     }
 
     return 0;
-}
+}*/
