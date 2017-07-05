@@ -1,4 +1,6 @@
+#include <thread>
 #include <iostream>
+#include "pool.hpp"
 
 #include "server.hpp"
 #include "client.hpp"
@@ -19,6 +21,29 @@ void prn_sig(int sig)
     }
 }
 
+void testConnection(std::shared_ptr<Pool> pool)
+{
+    auto conn = pool->Connection();
+
+    std::string test_str = "SELECT max(id) FROM demo; " ;
+    PQsendQuery(conn->Connection().get(), test_str.c_str());
+
+    while ( auto res_ = PQgetResult(conn->Connection().get())) {
+        if (PQresultStatus(res_) == PGRES_TUPLES_OK && PQntuples(res_)) {
+            auto ID = PQgetvalue (res_ ,0, 0);
+            std::cerr << ID << "\n";
+        }
+
+        if (PQresultStatus(res_) == PGRES_FATAL_ERROR){
+            std::cerr << PQresultErrorMessage(res_) << "\n";
+        }
+
+        PQclear(res_);
+    }
+
+    pool->FreeConnection(conn);
+}
+
 int main(int argc, char const *argv[])
 {
     signal(SIGINT, prn_sig);
@@ -26,7 +51,19 @@ int main(int argc, char const *argv[])
         const char *srv_addr = "127.0.0.1";
         int srv_port = 1050;
 
+        // Pool connection into bases
+        ptr_pool_t pool = std::make_shared<Pool>();
+        std::vector<std::shared_ptr<std::thread>> vec;
 
+        for ( size_t i = 0; i< 50 ; ++i ){
+            vec.push_back(std::make_shared<std::thread>(std::thread(testConnection, pool)));
+        }
+
+        for(auto &i : vec) {
+            i.get()->join();
+        }
+
+        // Run servers
         new Server(srv_addr, srv_port);
         new Server(srv_addr, srv_port + 1);
 
@@ -34,6 +71,7 @@ int main(int argc, char const *argv[])
             srv->Run();
         }
 
+        // Run clients
         new Client();
         new Client();
         new Client();

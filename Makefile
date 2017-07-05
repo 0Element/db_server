@@ -1,11 +1,11 @@
 CC = g++
 FLAGS = -g -Wall -std=c++11
 LIBS = -pthread
-INCLUDE = -Iinclude -I../include -I../../include
+INCLUDE = -Iinclude -I../include -I../../include -I/usr/include/postgresql
 
 OBJ_PATH = build
 LIB_PATH = libs
-INNER_LIBS = -l server -l nettools -l utils -l plugins
+INNER_LIBS = -lserver -lnettools -lutils -lplugins -lpq
 APP_SRV = target/srv
 
 export CC FLAGS LIBS INCLUDE
