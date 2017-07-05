@@ -7,9 +7,9 @@ PostgresCl::PostgresCl()
 {
     db_host = "localhost";
     db_port = 5432;
-    db_name = "test";
-    db_user = "waf";
-    db_pass = "waf";
+    db_name = "testdb";
+    db_user = "bogdan";
+    db_pass = "0987654321";
 
     m_connection.reset(PQsetdbLogin(db_host.c_str(),
                                     std::to_string(db_port).c_str(),

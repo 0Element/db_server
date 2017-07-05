@@ -23,9 +23,9 @@ void prn_sig(int sig)
 
 void testConnection(std::shared_ptr<Pool> pool)
 {
-    auto conn = pool->Connection();
+    ptr_pg_cl_t conn = pool->Connection();
 
-    std::string test_str = "SELECT max(id) FROM demo; " ;
+    std::string test_str = "SELECT max(id) FROM access;";
     PQsendQuery(conn->Connection().get(), test_str.c_str());
 
     while ( auto res_ = PQgetResult(conn->Connection().get())) {
@@ -47,6 +47,7 @@ void testConnection(std::shared_ptr<Pool> pool)
 int main(int argc, char const *argv[])
 {
     signal(SIGINT, prn_sig);
+
     try {
         const char *srv_addr = "127.0.0.1";
         int srv_port = 1050;
@@ -88,8 +89,8 @@ int main(int argc, char const *argv[])
         //while(true)
             file_cl.GetMsg();
     }
-    catch (std::exception) {
-        std::cerr << "Exception\n";
+    catch (std::exception ex) {
+        std::cerr << "Exception:" << ex.what() << "\n";
     }
 
     std::cerr << "End\n";

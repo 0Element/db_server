@@ -1,5 +1,5 @@
-OBJ_PATH = ../../build
-LIB_PATH = ../../libs
+OBJ_PATH = ../../../build
+LIB_PATH = ../../../libs
 
 BUILDDIR:=build
 sources:=$(wildcard *.cpp)
