@@ -1,15 +1,15 @@
 #include <thread>
 #include <iostream>
-#include "pool.hpp"
-
-#include "server.hpp"
-#include "client.hpp"
-#include "file_client.hpp"
-
 #include <exception>
 
 #include <unistd.h>
 #include <signal.h>
+
+#include "server.hpp"
+#include "client.hpp"
+#include "pool.hpp"
+#include "file_client.hpp"
+#include "sql_adapter.hpp"
 
 
 void prn_sig(int sig)
@@ -21,17 +21,28 @@ void prn_sig(int sig)
     }
 }
 
-void testConnection(std::shared_ptr<Pool> pool)
+void testConnection(ptr_pool_pg_t pool)
 {
-    ptr_pg_cl_t conn = pool->Connection();
+    ptr_pg_cl_t conn = pool->PopConn();
 
-    std::string test_str = "SELECT max(id) FROM access;";
-    PQsendQuery(conn->Connection().get(), test_str.c_str());
+    //std::string test_str = "SELECT max(id) FROM access;";
+    std::string test_str = "SELECT * FROM modsec WHERE id = 1;";
+    PQsendQuery(conn->Conn().get(), test_str.c_str());
 
-    while ( auto res_ = PQgetResult(conn->Connection().get())) {
+    while ( auto res_ = PQgetResult(conn->Conn().get())) {
         if (PQresultStatus(res_) == PGRES_TUPLES_OK && PQntuples(res_)) {
             auto ID = PQgetvalue (res_ ,0, 0);
             std::cerr << ID << "\n";
+
+            int rows = PQntuples(res_);
+            int cols = PQnfields(res_);
+            std::cerr << "rows:" << rows << ":\n";
+            std::cerr << "cols:" << cols << ":\n";
+            for (int i = 0; i < rows; i++) {
+                for (int j = 0; j < cols; j++) {
+                    std::cerr << "PQgetvalue:" << PQgetvalue(res_, i, j) << ":\n";
+                }
+            }
         }
 
         if (PQresultStatus(res_) == PGRES_FATAL_ERROR){
@@ -41,7 +52,7 @@ void testConnection(std::shared_ptr<Pool> pool)
         PQclear(res_);
     }
 
-    pool->FreeConnection(conn);
+    pool->PushConn(conn);
 }
 
 int main(int argc, char const *argv[])
@@ -53,16 +64,7 @@ int main(int argc, char const *argv[])
         int srv_port = 1050;
 
         // Pool connection into bases
-        ptr_pool_t pool = std::make_shared<Pool>();
-        std::vector<std::shared_ptr<std::thread>> vec;
-
-        for ( size_t i = 0; i< 50 ; ++i ){
-            vec.push_back(std::make_shared<std::thread>(std::thread(testConnection, pool)));
-        }
-
-        for(auto &i : vec) {
-            i.get()->join();
-        }
+        auto pool_pg = std::make_shared<pool_pg_t>(5);
 
         // Run servers
         new Server(srv_addr, srv_port);

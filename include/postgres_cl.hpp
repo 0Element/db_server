@@ -10,7 +10,7 @@ class PostgresCl
 public:
     PostgresCl();
     ~PostgresCl();
-    ptr_pgconn_t Connection() const;
+    ptr_pgconn_t Conn() const;
 
     static int count;
 

@@ -34,7 +34,7 @@ PostgresCl::~PostgresCl()
     PostgresCl::count--;
 }
 
-ptr_pgconn_t PostgresCl::Connection() const
+ptr_pgconn_t PostgresCl::Conn() const
 {
     return m_connection;
 }
