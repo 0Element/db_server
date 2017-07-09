@@ -5,14 +5,14 @@ INCLUDE = -Iinclude -I../include -I../../include -I../../../include -I/usr/inclu
 
 OBJ_PATH = build
 LIB_PATH = libs
-INNER_LIBS = -lserver -lnettools -lutils -lfile_cl -lpostgres_cl
+INNER_LIBS = -lserver -lnettools -lproto -lutils -lfile_cl -lpostgres_cl
 OUT_LIBS = -lpq
 APP_SRV = target/srv
 
 export CC FLAGS LIBS INCLUDE
 
 
-all: check_path plugins utils nettools server main
+all: check_path plugins utils nettools server main proto
 	$(CC) $(FLAGS) $(INCLUDE) -o $(APP_SRV) $(OBJ_PATH)/*.o -L $(LIB_PATH)/ $(INNER_LIBS) $(OUT_LIBS) $(LIBS)
 
 main:
@@ -27,6 +27,9 @@ nettools:
 utils:
 	cd src/utils; make PKG_NAME=libutils.a
 
+proto:
+	cd src/proto; make PKG_NAME=libproto.a
+
 plugins: postgres_cl file_cl
 
 postgres_cl:
@@ -34,6 +37,7 @@ postgres_cl:
 
 file_cl:
 	cd src/plugins/file_cl; make PKG_NAME=libfile_cl.a
+
 
 check_path:
 	test -d target || mkdir target
@@ -49,5 +53,6 @@ clean:
 	cd src/server; make clean PKG_NAME=libserver.a
 	cd src/nettools; make clean PKG_NAME=libnettools.a
 	cd src/utils; make clean PKG_NAME=libutils.a
+	cd src/proto; make clean PKG_NAME=libproto.a
 	cd src/plugins/postgres_cl; make clean PKG_NAME=libpostgres_cl.a
 	cd src/plugins/file_cl; make clean PKG_NAME=libfile_cl.a

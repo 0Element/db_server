@@ -11,6 +11,8 @@
 #include "file_client.hpp"
 #include "sql_adapter.hpp"
 
+#include "proto.h"
+
 
 void prn_sig(int sig)
 {
@@ -62,6 +64,20 @@ int main(int argc, char const *argv[])
     try {
         const char *srv_addr = "127.0.0.1";
         int srv_port = 1050;
+
+        // Add in dictdata
+        dictdata dh;
+        std::shared_ptr<proto_value> pv1(new proto_value("111"));
+        std::shared_ptr<proto_value> pv2(new proto_value("2222"));
+
+        dh.add("dh1", pv1);
+        dh.add("dh2", pv2);
+
+        auto pv1_get = dh.get("dh1");
+        auto pv2_get = dh.get("dh2");
+
+        std::cerr << "dh get1:" << (char*)pv1_get->getvalue() << ":\n";
+        std::cerr << "dh get2:" << (char*)pv2_get->getvalue() << ":\n";
 
         // Pool connection into bases
         auto pool_pg = std::make_shared<pool_pg_t>(5);
