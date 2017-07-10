@@ -63,6 +63,29 @@ void test_pool()
     thr.join();
 }
 
+void test_sql()
+{
+    char* sql_line;
+    std::vector<std::string> keys = {"key1","key2","key3"};
+    std::vector<std::string> vals = {"val1","val2","val3"};
+
+    sql_line = create_sql(INSERT, keys, vals);
+    std::cerr << "SQL INSERT:" << sql_line <<":\n";
+    free(sql_line);
+
+    sql_line = create_sql(SELECT, keys, vals);
+    std::cerr << "SQL SELECT:" << sql_line <<":\n";
+    free(sql_line);
+
+    sql_line = create_sql(UPDATE, keys, vals);
+    std::cerr << "SQL UPDATE:" << sql_line <<":\n";
+    free(sql_line);
+
+    sql_line = create_sql(DELETE, keys, vals);
+    std::cerr << "SQL DELETE:" << sql_line <<":\n";
+    free(sql_line);
+}
+
 int main(int argc, char const *argv[])
 {
     signal(SIGINT, prn_sig);
@@ -71,8 +94,9 @@ int main(int argc, char const *argv[])
         const char *srv_addr = "127.0.0.1";
         int srv_port = 1050;
 
-        test_pool();
-        test_proto();
+        test_sql();
+        //test_pool();
+        //test_proto();
 
         // Run servers
         new Server(srv_addr, srv_port);

@@ -1,3 +1,4 @@
+#include <iostream>
 #include <sstream>
 #include <algorithm>
 #include <iterator>
@@ -22,43 +23,62 @@ const std::string CONDITION = "1=1";
 //std::string create_sql(std::string operat, std::string str_keys, std::string str_values);
 //std::string create_sql(std::string operat, vec_str_t v_keys, vec_str_t v_values);
 
-std::string create_sql(int operat, vec_str_t v_keys, vec_str_t v_values)
+char* create_sql(int operat, vec_str_t v_keys, vec_str_t v_values)
 {
-    std::ostringstream str_keys, str_values;
+    std::string str_keys, str_values;
 
-    std::copy(v_keys.begin(), v_keys.end(), std::ostream_iterator<std::string>(str_keys,", "));
-    std::copy(v_values.begin(), v_values.end(), std::ostream_iterator<std::string>(str_values,", "));
+    //std::copy(v_keys.begin(), v_keys.end(), std::ostream_iterator<std::string>(str_keys,", "));
+    //std::copy(v_values.begin(), v_values.end(), std::ostream_iterator<std::string>(str_values,", "));
+    str_keys = join(v_keys, ", ");
+    str_values = join(v_values, ", ");
 
     if (operat == UPDATE) {
-        std::string result;
-        std::string str_sets;
+        char* result = (char*)calloc(1, 1024);
+        std::ostringstream keys_vals;
+
         for (size_t i = 0; (i < v_keys.size()) && (i < v_values.size()); i++)
         {
-            str_sets += v_keys[i] + "=" + v_values[i];
+            if (i != 0) keys_vals << ", ";
+            keys_vals << (v_keys[i] + " = " + v_values[i]);
         }
-        sprintf(&result[0], sql_operations[UPDATE].c_str(), TABLE, str_sets, CONDITION);
+
+        sprintf(result, sql_operations[UPDATE].c_str(),
+            TABLE.c_str(), keys_vals.str().c_str(), CONDITION.c_str());
+
         return result;
     }
 
-    return create_sql(operat, str_keys.str(), str_values.str());
+    //std::cerr << "str_keys:" << str_keys << ":\n";
+    //std::cerr << "str_values:" << str_values << ":\n";
+
+    return create_sql(operat, str_keys, str_values);
 }
 
-std::string create_sql(int operat, std::string str_keys, std::string str_values)
+char* create_sql(int operat, std::string str_keys, std::string str_values)
 {
-    std::string result;
+    //std::string result;
+    char *result = (char*)calloc(1, 1024);
 
-    if (operat == INSERT)
-        sprintf(&result[0], sql_operations[INSERT].c_str(), TABLE, str_keys, str_values);
-    else if (operat == SELECT)
-        sprintf(&result[0], sql_operations[SELECT].c_str(), str_keys, TABLE);
-    else if (operat == DELETE) {
-        sprintf(&result[0], sql_operations[DELETE].c_str(), TABLE, CONDITION);
+    if (operat == INSERT) {
+        sprintf(result, sql_operations[operat].c_str(),
+            TABLE.c_str(), str_keys.c_str(), str_values.c_str());
     }
+    else if (operat == SELECT) {
+        sprintf(result, sql_operations[operat].c_str(),
+            str_keys.c_str(), TABLE.c_str());
+    }
+    else if (operat == DELETE) {
+        sprintf(result, sql_operations[operat].c_str(),
+            TABLE.c_str(), CONDITION.c_str());
+    }
+
+    //std::cerr << "sql_operations[operat]:" << sql_operations[operat] << ":\n";
+    //std::cerr << "result:" << result << ":\n";
 
     return result;
 }
 
-std::string create_sql(std::string str_operat, std::string str_keys, std::string str_values)
+char* create_sql(std::string str_operat, std::string str_keys, std::string str_values)
 {
     int operat;
 
@@ -76,7 +96,7 @@ std::string create_sql(std::string str_operat, std::string str_keys, std::string
     return create_sql(operat, str_keys, str_values);
 }
 
-std::string create_sql(std::string str_operat, vec_str_t v_keys, vec_str_t v_values)
+char* create_sql(std::string str_operat, vec_str_t v_keys, vec_str_t v_values)
 {
     int operat;
 
@@ -92,4 +112,16 @@ std::string create_sql(std::string str_operat, vec_str_t v_keys, vec_str_t v_val
         operat = NONE;
 
     return create_sql(operat, v_keys, v_values);
+}
+
+template <typename T>
+std::string join(const T& v, const std::string& delim) {
+    std::ostringstream s;
+    for (const auto& i : v) {
+        if (&i != &v[0]) {
+            s << delim;
+        }
+        s << i;
+    }
+    return s.str();
 }
