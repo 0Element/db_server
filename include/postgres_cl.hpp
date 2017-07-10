@@ -1,6 +1,6 @@
 #include <memory>
 #include <mutex>
-#include <libpq-fe.h>
+#include <postgresql/libpq-fe.h>
 
 
 typedef std::shared_ptr<PGconn> ptr_pgconn_t;
@@ -11,6 +11,7 @@ public:
     PostgresCl();
     ~PostgresCl();
     ptr_pgconn_t Conn() const;
+    int Exec(std::string sql_line);
 
     static int count;
 

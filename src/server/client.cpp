@@ -11,7 +11,7 @@ v_ptr_client_t Client::clients;
 
 Client::Client()
 {
-    std::cerr << "Constructor client\n";
+    //std::cerr << "Constructor client\n";
     messages = ptr_msg_t((new Message()));
     epoll = ptr_epoll_t(new Epoll());
 

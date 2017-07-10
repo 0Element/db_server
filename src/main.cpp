@@ -23,38 +23,44 @@ void prn_sig(int sig)
     }
 }
 
-void testConnection(ptr_pool_pg_t pool)
+void test_proto()
 {
-    ptr_pg_cl_t conn = pool->PopConn();
+    // Add in dictdata
+    dictdata dh;
+    std::shared_ptr<proto_value> pv1(new proto_value("111"));
+    std::shared_ptr<proto_value> pv2(new proto_value("2222"));
+
+    dh.add("dh1", pv1);
+    dh.add("dh2", pv2);
+
+    auto pv1_get = dh.get("dh1");
+    auto pv2_get = dh.get("dh2");
+
+    std::cerr << "dh get1:" << (char*)pv1_get->getvalue() << ":\n";
+    std::cerr << "dh get2:" << (char*)pv2_get->getvalue() << ":\n";
+}
+
+void test_pool_pg(ptr_pool_pg_t pool_pg)
+{
+    // Pool connection into bases
+    ptr_pg_cl_t conn = pool_pg->PopConn();
 
     //std::string test_str = "SELECT max(id) FROM access;";
-    std::string test_str = "SELECT * FROM modsec WHERE id = 1;";
-    PQsendQuery(conn->Conn().get(), test_str.c_str());
+    std::string sql_line = "SELECT * FROM modsec WHERE id = 1;";
 
-    while ( auto res_ = PQgetResult(conn->Conn().get())) {
-        if (PQresultStatus(res_) == PGRES_TUPLES_OK && PQntuples(res_)) {
-            auto ID = PQgetvalue (res_ ,0, 0);
-            std::cerr << ID << "\n";
-
-            int rows = PQntuples(res_);
-            int cols = PQnfields(res_);
-            std::cerr << "rows:" << rows << ":\n";
-            std::cerr << "cols:" << cols << ":\n";
-            for (int i = 0; i < rows; i++) {
-                for (int j = 0; j < cols; j++) {
-                    std::cerr << "PQgetvalue:" << PQgetvalue(res_, i, j) << ":\n";
-                }
-            }
-        }
-
-        if (PQresultStatus(res_) == PGRES_FATAL_ERROR){
-            std::cerr << PQresultErrorMessage(res_) << "\n";
-        }
-
-        PQclear(res_);
+    if (conn->Exec(sql_line) != 0) {
+        throw (std::exception());
     }
 
-    pool->PushConn(conn);
+    pool_pg->PushConn(conn);
+}
+
+void test_pool()
+{
+    ptr_pool_pg_t pool_pg = std::make_shared<pool_pg_t>(5);
+
+    std::thread thr = std::thread(test_pool_pg, pool_pg);
+    thr.join();
 }
 
 int main(int argc, char const *argv[])
@@ -65,22 +71,8 @@ int main(int argc, char const *argv[])
         const char *srv_addr = "127.0.0.1";
         int srv_port = 1050;
 
-        // Add in dictdata
-        dictdata dh;
-        std::shared_ptr<proto_value> pv1(new proto_value("111"));
-        std::shared_ptr<proto_value> pv2(new proto_value("2222"));
-
-        dh.add("dh1", pv1);
-        dh.add("dh2", pv2);
-
-        auto pv1_get = dh.get("dh1");
-        auto pv2_get = dh.get("dh2");
-
-        std::cerr << "dh get1:" << (char*)pv1_get->getvalue() << ":\n";
-        std::cerr << "dh get2:" << (char*)pv2_get->getvalue() << ":\n";
-
-        // Pool connection into bases
-        auto pool_pg = std::make_shared<pool_pg_t>(5);
+        test_pool();
+        test_proto();
 
         // Run servers
         new Server(srv_addr, srv_port);

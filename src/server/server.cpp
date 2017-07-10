@@ -17,7 +17,7 @@ v_ptr_srv_t Server::servers;
 
 Server::Server(const char* addr, int port)
 {
-    std::cerr << "Constructor Server\n";
+    //std::cerr << "Constructor Server\n";
     struct sockaddr_in srv;
     std::memset(&srv, 0, sizeof(srv));
     srv.sin_family = AF_INET;

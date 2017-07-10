@@ -4,5 +4,3 @@
 #include <sstream>
 
 #include "pool.hpp"
-
-

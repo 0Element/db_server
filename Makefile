@@ -1,7 +1,7 @@
 CC = g++
 FLAGS = -g -Wall -std=c++11
 LIBS = -pthread
-INCLUDE = -Iinclude -I../include -I../../include -I../../../include -I/usr/include/postgresql
+INCLUDE = -Iinclude -I../include -I../../include -I../../../include
 
 OBJ_PATH = build
 LIB_PATH = libs

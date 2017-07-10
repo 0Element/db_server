@@ -5,8 +5,6 @@
 #include <map>
 #include <condition_variable>
 
-#include <libpq-fe.h>
-
 #include "postgres_cl.hpp"
 
 
@@ -14,25 +12,23 @@ template<class ClClass>
 class Pool;
 
 typedef std::shared_ptr<PostgresCl> ptr_pg_cl_t;
-typedef Pool<ptr_pg_cl_t> pool_pg_t;
+typedef Pool<PostgresCl> pool_pg_t;
 typedef std::shared_ptr<pool_pg_t> ptr_pool_pg_t;
-
-typedef std::queue<ptr_pg_cl_t> q_pg_cl_t;
 
 template<class ClClass>
 class Pool
 {
 public:
     Pool(int count);
-    ClClass PopConn();
-    void PushConn(ClClass);
+    std::shared_ptr<ClClass> PopConn();
+    void PushConn(std::shared_ptr<ClClass>);
 
 private:
     void CreatePool(int count);
 
     std::mutex mutex_;
     std::condition_variable condition_;
-    std::queue<ClClass> m_pool;
+    std::queue<std::shared_ptr<ClClass>> q_pool;
 };
 
 template<class ClClass>
@@ -47,30 +43,30 @@ void Pool<ClClass>::CreatePool(int count)
     std::lock_guard<std::mutex> lock(mutex_);
 
     for (int i = 0; i < count; ++i){
-        m_pool.emplace(ClClass());
+        q_pool.emplace(std::make_shared<ClClass>());
     }
 }
 
 template<class ClClass>
-ClClass Pool<ClClass>::PopConn()
+std::shared_ptr<ClClass> Pool<ClClass>::PopConn()
 {
     std::unique_lock<std::mutex> lock(mutex_);
 
-    while (m_pool.empty()){
+    while (q_pool.empty()){
         condition_.wait(lock);
     }
 
-    ClClass cl = m_pool.front();
-    m_pool.pop();
+    std::shared_ptr<ClClass> cl = q_pool.front();
+    q_pool.pop();
 
     return cl;
 }
 
 template<class ClClass>
-void Pool<ClClass>::PushConn(ClClass cl)
+void Pool<ClClass>::PushConn(std::shared_ptr<ClClass> cl)
 {
     std::unique_lock<std::mutex> lock(mutex_);
-    m_pool.push(cl);
+    q_pool.push(cl);
     lock.unlock();
     condition_.notify_one();
 }
