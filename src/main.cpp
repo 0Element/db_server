@@ -8,8 +8,11 @@
 #include "server.hpp"
 #include "client.hpp"
 #include "pool.hpp"
-#include "file_client.hpp"
 #include "sql_adapter.hpp"
+#include "sock.hpp"
+
+#include "file_client.hpp"
+#include "postgres_cl.hpp"
 
 #include "proto.h"
 
@@ -40,51 +43,92 @@ void test_proto()
     std::cerr << "dh get2:" << (char*)pv2_get->getvalue() << ":\n";
 }
 
-void test_pool_pg(ptr_pool_pg_t pool_pg)
+void test_pool_pg(ptr_pool_pg_t pool_pg, std::string sql_line, int port)
 {
     // Pool connection into bases
     ptr_pg_cl_t conn = pool_pg->PopConn();
 
-    //std::string test_str = "SELECT max(id) FROM access;";
-    std::string sql_line = "SELECT * FROM modsec WHERE id = 1;";
-
     if (conn->Exec(sql_line) != 0) {
         throw (std::exception());
     }
+    Write(port, 0, "ok");
 
     pool_pg->PushConn(conn);
 }
 
-void test_pool()
+void test_pool(std::string sql_line, int port)
 {
     ptr_pool_pg_t pool_pg = std::make_shared<pool_pg_t>(5);
 
-    std::thread thr = std::thread(test_pool_pg, pool_pg);
+    std::thread thr = std::thread(test_pool_pg, pool_pg, sql_line, port);
     thr.join();
 }
 
-void test_sql()
+/*void test_sql()
 {
-    char* sql_line;
-    std::vector<std::string> keys = {"key1","key2","key3"};
-    std::vector<std::string> vals = {"val1","val2","val3"};
+    ptr_pool_pg_t pool_pg = std::make_shared<pool_pg_t>(5);
+
+    std::thread thr;
+    std::string sql_line;
+
+    set_condition("id_buf = \'123\'");
+
+    /////////// VECTOR ////////////
+    std::vector<std::string> keys = {"id_buf","from_ip","method"};
+    std::vector<std::string> vals = {"\'111\'","\'12.7.7.7\'","\'GET\'"};
 
     sql_line = create_sql(INSERT, keys, vals);
     std::cerr << "SQL INSERT:" << sql_line <<":\n";
-    free(sql_line);
+
+    thr = std::thread(test_pool_pg, pool_pg, sql_line);
+    thr.join();
 
     sql_line = create_sql(SELECT, keys, vals);
     std::cerr << "SQL SELECT:" << sql_line <<":\n";
-    free(sql_line);
+
+    thr = std::thread(test_pool_pg, pool_pg, sql_line);
+    thr.join();
 
     sql_line = create_sql(UPDATE, keys, vals);
     std::cerr << "SQL UPDATE:" << sql_line <<":\n";
-    free(sql_line);
+
+    thr = std::thread(test_pool_pg, pool_pg, sql_line);
+    thr.join();
 
     sql_line = create_sql(DELETE, keys, vals);
     std::cerr << "SQL DELETE:" << sql_line <<":\n";
-    free(sql_line);
-}
+
+    thr = std::thread(test_pool_pg, pool_pg, sql_line);
+    thr.join();
+
+    /////////// STRING ////////////
+    std::string str_keys("id_buf,from_ip,method");
+    std::string str_vals("\'111\',\'12.7.7.7\',\'GET\'");
+
+    sql_line = create_sql(INSERT, str_keys, str_vals);
+    std::cerr << "SQL INSERT:" << sql_line <<":\n";
+
+    thr = std::thread(test_pool_pg, pool_pg, sql_line);
+    thr.join();
+
+    sql_line = create_sql(SELECT, str_keys, str_vals);
+    std::cerr << "SQL SELECT:" << sql_line <<":\n";
+
+    thr = std::thread(test_pool_pg, pool_pg, sql_line);
+    thr.join();
+
+    sql_line = create_sql(UPDATE, str_keys, str_vals);
+    std::cerr << "SQL UPDATE:" << sql_line <<":\n";
+
+    thr = std::thread(test_pool_pg, pool_pg, sql_line);
+    thr.join();
+
+    sql_line = create_sql(DELETE, str_keys, str_vals);
+    std::cerr << "SQL DELETE:" << sql_line <<":\n";
+
+    thr = std::thread(test_pool_pg, pool_pg, sql_line);
+    thr.join();
+}*/
 
 int main(int argc, char const *argv[])
 {
@@ -93,10 +137,6 @@ int main(int argc, char const *argv[])
     try {
         const char *srv_addr = "127.0.0.1";
         int srv_port = 1050;
-
-        test_sql();
-        //test_pool();
-        //test_proto();
 
         // Run servers
         new Server(srv_addr, srv_port);
@@ -118,10 +158,27 @@ int main(int argc, char const *argv[])
         std::cerr << "Servers count: " << Server::servers.size() << "\n";
         std::cerr << "Clients count: " << Client::clients.size() << "\n";
 
-        //sleep(-1);
-        FileClient file_cl;
-        //while(true)
-            file_cl.GetMsg();
+        //test_sql();
+
+        PostgresCl pcl;
+
+        while (1) {
+            port_msg_t port_msg = pcl.GetMsg();
+            std::cerr << "port_msg.first:" << port_msg.first << ":\n";
+            std::cerr << "port_msg.second:" << port_msg.second << ":\n";
+            try {
+                std::string sql_line = get_sql(port_msg.second);
+                if (sql_line.empty()) throw(std::exception());
+
+                std::cerr << "main sql_line: " << sql_line << "\n";
+                test_pool(sql_line, port_msg.first);
+            } catch (...){
+                std::cerr << "catch\n";
+                Write(port_msg.first, -1, "parse json error");
+            }
+        }
+
+        //test_proto();
     }
     catch (std::exception ex) {
         std::cerr << "Exception:" << ex.what() << "\n";

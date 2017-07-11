@@ -8,7 +8,7 @@ if __name__ == "__main__":
 
 
     key = "\0"
-    body = {"type": "request", "db": "file_client", "func":"func1", "type": "select", "base": "postgress"}
+    body = {"db": "postgres", "type": "INSERT", "keys": "id_buf,from_ip,method", "vals": "\'111\',\'12.7.7.7\',\'GET\'"}
     request = key + json.dumps(body) + key
 
     sock = socket(AF_INET, SOCK_STREAM)
@@ -25,6 +25,7 @@ if __name__ == "__main__":
 
     except sock_exc_time as err:
         print("Except")
+        print(err)
 
     sock.close()
 

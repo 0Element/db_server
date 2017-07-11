@@ -7,7 +7,7 @@
 
 void make_non_block(int sock);
 int Read(int sock, char* buff);
-void Write(int sock);
+void Write(int sock, int status, const char* msg);
 void Close(int sock);
 
 char* Makeresponse(char* pbuf, const char* ptmpl, int st, const char* pmes);

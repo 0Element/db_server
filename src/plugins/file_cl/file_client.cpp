@@ -21,8 +21,8 @@ void FileClient::GetMsg(std::string name_plug)
     else
         port_msg = Message::Pop(name_plug);
 
-    std::cerr << "Print 1 from mesage :" << port_msg.first << ":\n";
-    std::cerr << "Print 2 from mesage :" << port_msg.second << ":\n";
+    std::cerr << "FileCl Print 1 from mesage :" << port_msg.first << ":\n";
+    std::cerr << "FileCl Print 2 from mesage :" << port_msg.second << ":\n";
 
-    Write(port_msg.first);
+    Write(port_msg.first, 0, "ok");
 }

@@ -35,10 +35,10 @@ int Read(int sock, char* buff)
     return len_buff;
 }
 
-void Write(int sock)
+void Write(int sock, int status, const char* msg)
 {
     char pbuf[1024];
-    Makeresponse(pbuf, presponse, 0, "ok");
+    Makeresponse(pbuf, presponse, status, msg);
     send(sock, pbuf, strlen(pbuf), 0);
 }
 

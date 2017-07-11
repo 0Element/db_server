@@ -1,6 +1,8 @@
 #include <iostream>
 
 #include "postgres_cl.hpp"
+#include "message.hpp"
+//#include "sock.hpp"
 
 
 int PostgresCl::count = 0;
@@ -72,4 +74,19 @@ int PostgresCl::Exec(std::string sql_line)
     }
 
     return 0;
+}
+
+port_msg_t PostgresCl::GetMsg(std::string name_plug)
+{
+    port_msg_t port_msg;
+    if (name_plug.empty())
+        port_msg = Message::Pop("postgres" /*"default"*/);
+    else
+        port_msg = Message::Pop(name_plug);
+
+    //std::cerr << "Postgres Print 1 from mesage :" << port_msg.first << ":\n";
+    //std::cerr << "Postgres Print 2 from mesage :" << port_msg.second << ":\n";
+
+    //Write(port_msg.first);
+    return port_msg;
 }
